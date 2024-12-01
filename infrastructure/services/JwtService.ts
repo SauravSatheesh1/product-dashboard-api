@@ -1,11 +1,12 @@
 import * as jwt from 'jsonwebtoken'
 import { User } from '../../core/entities/User'
+import { config } from '../../config/config'
 
 export class JwtService {
     private readonly secret: string
 
     constructor() {
-        this.secret = process.env.JWT_SECRET || 'your-secret-key'
+        this.secret = config.jwtSecret || 'your-secret-key'
     }
 
     generateToken(user: User): string {
