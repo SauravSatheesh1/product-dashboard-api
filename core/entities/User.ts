@@ -1,8 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from "typeorm";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BeforeInsert,
+  Unique,
+} from "typeorm";
 import { IsEmail, Length } from "class-validator";
 import * as bcrypt from "bcrypt";
 
 @Entity()
+@Unique(["email"])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -10,7 +17,7 @@ export class User {
   @Column()
   username: string;
 
-  @Column()
+  @Column({ unique: true })
   @IsEmail()
   email: string;
 

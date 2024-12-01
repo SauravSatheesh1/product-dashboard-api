@@ -13,6 +13,8 @@ import { User } from "./core/entities/User";
 import { authMiddleware } from "./presentation/middlewares/authMiddleWare";
 import { CsvUploadService } from "./application/services/CsvUploadService";
 import { CsvUploadController } from "./presentation/controllers/CsvUploadController";
+import { validate } from "./presentation/middlewares/validate";
+import { body } from "express-validator";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -24,8 +26,13 @@ export const createApp = async () => {
 
   const dataBaseInstance = AppDataSource;
 
-  // Database connection
+  console.log("Connecting to the database...");
   await dataBaseInstance.initialize();
+  console.log("Database connected successfully");
+
+  console.log("Running migrations...");
+  await dataBaseInstance.runMigrations();
+  console.log("Migrations completed successfully");
 
   // Repositories
   const productRepository = new ProductRepository(
@@ -62,8 +69,28 @@ export const createApp = async () => {
     productController.deleteProduct(req, res)
   );
 
-  app.post("/users", (req, res) => userController.createUser(req, res));
-  app.post("/login", (req, res) => userController.login(req, res));
+  app.post(
+    "/users",
+    validate([
+      body("username").notEmpty().withMessage("Username is required"),
+      body("email").isEmail().withMessage("Please enter a valid email"),
+      body("password")
+        .isLength({ min: 6 })
+        .withMessage("Password must be at least 6 characters long"),
+    ]),
+    (req, res) => userController.createUser(req, res)
+  );
+
+  app.post(
+    "/login",
+    validate([
+      body("email").isEmail().withMessage("Please enter a valid email"),
+      body("password")
+        .isLength({ min: 6 })
+        .withMessage("Password must be at least 6 characters long"),
+    ]),
+    (req, res) => userController.login(req, res)
+  );
   app.get("/users", authMiddleware, (req, res) =>
     userController.getAllUsers(req, res)
   );
